@@ -1,31 +1,69 @@
-import React, { useState, useEffect, memo } from 'react';
+import React, { useEffect, useRef } from "react";
 
-const Todo = memo(({todo }) => <h1>{todo.item}</h1>)
+//Width and height for our canvas
+var canvasWidth = 200; 
+var canvasHeight = 200;
 
-const AddTodo = ({ onClick }) => {
-  const [ text, setText ] = useState("");
+//the with and height of our spritesheet
+var spriteWidth = 864; 
+var spriteHeight = 280; 
 
-  function onSubmit(e) {
-    e.preventDefault()
-    onClick(text)
-    setText("")
-  }
+//we are having two rows and 8 cols in the current sprite sheet
+var rows = 2; 
+var cols = 8; 
 
-  return  (
-    <form onSubmit={onSubmit}>
-      <input type="text" value={text} onChange={(e) => setText(e.target.value)}/>
-      <button type="submit">Add</button>
-    </form>
-  )
-}
+var width = spriteWidth/cols;
+var height = spriteHeight/rows;
 
-export default function Todos() {
-  const [ todos, setTodos ] = useState([{ item: "Task 1", selected: false}, { item: "Task 2", selected: false }]);
+//x and y coordinates to render the sprite 
+var x=0;
+var y=0; 
 
-  return (
-    <>
-    <AddTodo onClick={(text) => setTodos([ ...todos, { item: text, selected: false }])} />
-    {todos.map((todo, index) => (<Todo todo={todo} key={index} />))}
-    </>
-  )
+//x and y coordinates of the canvas to get the single frame 
+var srcX=0; 
+var srcY=0;
+
+//Each row contains 8 frame and at start we will display the first frame (assuming the index from 0)
+var curFrame = 0; 
+
+//The total frame is 8 
+var frameCount = 8; 
+
+export default function Character() {
+  const canvas = useRef(null);
+
+  useEffect(() => {
+    //setting width and height of the canvas 
+    canvas.current.width = canvasWidth;
+    canvas.current.height = canvasHeight;
+
+    //Establishing a context to the canvas
+    var ctx = canvas.current.getContext("2d");
+    
+    //Creating an Image object for our character 
+    var character = new Image(); 
+    
+    //Setting the source to the image file 
+    character.src = "https://i1.wp.com/www.simplifiedcoding.net/wp-content/uploads/2016/02/character.png?w=864&ssl=1";
+
+    function updateFrame(){
+        //Updating the frame index 
+        curFrame = ++curFrame % frameCount; 
+        //Calculating the x coordinate for spritesheet 
+        srcX = curFrame * width; 
+    }
+
+    function draw(){
+      ctx.clearRect(x,y,width,height);
+      //Updating the frame 
+      updateFrame();
+      //Drawing the image 
+      ctx.drawImage(character,srcX,srcY,width,height,x,y,width,height);
+    }
+
+    setInterval(draw,100);
+    
+  }, [])
+  
+  return <canvas ref={canvas}></canvas>
 }
